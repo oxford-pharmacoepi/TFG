@@ -1,6 +1,3 @@
-#library(here)
-#source(here("codelist/codelist_creation.R"))
-
 cdm$vaccine <- conceptCohort(cdm = cdm,
                              conceptSet = list(
                              "vaccine_record" =

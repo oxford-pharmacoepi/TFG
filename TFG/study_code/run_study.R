@@ -39,20 +39,20 @@ source(here("analyses", "cohort_characteristics.R"))
 logMessage("Analyses finished")
 
 # Capture log file ----
-#results[["log"]] <- summariseLogFile(cdmName = omopgenerics::cdmName(cdm))
+results[["log"]] <- summariseLogFile(cdmName = omopgenerics::cdmName(cdm))
 
 # Finish ----
-results$characterisation        <- characterisation
 results$largeScale              <- LargeScaleCharacteristics
 results$characterisationRegCamp <- characterisationRegCamp
 results$characterisationRegion  <- characterisationRegion
 
-results <- results |>
+results_exp <- results |>
   vctrs::list_drop_empty() |>
   omopgenerics::bind()
-exportSummarisedResult(results,
+exportSummarisedResult(results_exp,
                        minCellCount = min_cell_count,
                        fileName = "results_{cdm_name}_{date}.csv",
-                       path = here("results"))
-
+                       path = here("Results"))
+write.csv(x, "Results/plot.csv", row.names = FALSE)
 cli::cli_alert_success("Study finished")
+
