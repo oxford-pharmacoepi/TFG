@@ -53,6 +53,6 @@ exportSummarisedResult(results_exp,
                        minCellCount = min_cell_count,
                        fileName = "results_{cdm_name}_{date}.csv",
                        path = here("Results"))
-write.csv(x, "Results/plot.csv", row.names = FALSE)
+write.csv(x_dose, "Results/plot_dose.csv", row.names = FALSE)
 cli::cli_alert_success("Study finished")
 

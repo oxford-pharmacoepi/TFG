@@ -44,13 +44,3 @@ LargeScaleCharacteristics <- summariseLargeScaleCharacteristics(
   excludedCodes = c(0)
 )
 
-x <- cdm$vaccine_camp |>
-  group_by(vaccination_campaign, cohort_start_date) |>
-  tally() |>
-  collect() |>
-  select(vaccination_campaign, cohort_start_date, n) |>
-  mutate(n = dplyr::if_else(n < 5, 5L, as.integer(n))
-  ) |>
-  collect(name=x)
-  
-                

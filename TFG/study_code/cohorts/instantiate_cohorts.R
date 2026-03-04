@@ -45,4 +45,34 @@ cdm$vaccine_camp <- cdm$vaccine_90 |>
   recordCohortAttrition(reason="vaccine_campaigns") |>
   compute(name = "vaccine_camp") 
 
+cdm$vaccine_90_dose <-cdm$vaccine_90 |>
+  group_by(subject_id) |>
+  arrange(cohort_start_date) |> 
+  mutate( 
+    "dose" = paste(row_number(),"dose")
+        ) |>
+  ungroup() |>
+  group_by(cohort_start_date, dose) |>
+  add_tally()|>
+  ungroup()|> arrange(cohort_start_date)|>
+  compute(name="vaccine_90_dose")
+
+x <- cdm$vaccine_camp |>
+  group_by(vaccination_campaign, cohort_start_date) |>
+  tally() |>
+  collect() |>
+  select(vaccination_campaign, cohort_start_date, n) |>
+  mutate(n = dplyr::if_else(n < 5, 5L, as.integer(n))
+  ) |>
+  collect(name=x)
+
+x_dose<-cdm$vaccine_90_dose|>
+  select(cohort_start_date, dose, n) |>
+  rename(n_dose=n) |>
+  distinct(cohort_start_date, dose, n_dose) |>
+  group_by(cohort_start_date) |>
+  mutate(n=sum(n_dose))|>
+  mutate(n = dplyr::if_else(n < 5, 5L, as.integer(n))
+  ) |>
+  collect(name=x_dose)
 
