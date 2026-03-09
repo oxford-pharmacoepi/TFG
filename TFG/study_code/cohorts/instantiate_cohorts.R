@@ -202,3 +202,18 @@ cdm$vaccine_camp <- cdm$vaccine_camp |>
               select(subject_id, ethnicity),
             by="subject_id") |> 
   addSex()
+
+# cdm$vaccine_camp_imm_coh|>tally(): 128
+# cdm$vaccine_age|>tally(): 4596
+# cdm$vaccine_camp_fin|>tally(): 4639
+# We should expect 43 that are only immuno. 
+
+# cdm$vaccine_camp_imm_coh |> 
+#   addCohortIntersectFlag(
+#     targetCohortTable = "vaccine_age",
+#     window = c(0,0)
+#   ) |>
+#   filter(vaccine_record_0_to_0>0) |>
+#   tally()
+# we get 85 (85+43 =128) GOOD
+

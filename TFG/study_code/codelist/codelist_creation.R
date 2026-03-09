@@ -1,9 +1,9 @@
-# codes <- omopgenerics::importConceptSetExpression(path = "new_codelists", type = "csv")
-# codelists <- CodelistGenerator::asCodelist(codes, cdm = cdm)
-# exportCodelist(
-#   codelists, "codelist",
-#   type = "csv"
-# )
+codes <- omopgenerics::importConceptSetExpression(path = "new_codelists", type = "csv")
+codelists <- CodelistGenerator::asCodelist(codes, cdm = cdm)
+exportCodelist(
+  codelists, "codelist",
+  type = "csv"
+)
 
 codelist <- importCodelist("codelist", type = "csv")
 diagnosis <- unique(codelist$covid_diagnosis_broad)

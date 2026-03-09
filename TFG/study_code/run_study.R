@@ -1,4 +1,3 @@
-                                                 "concept"))
 omopgenerics::assertNumeric(min_cell_count)
 
 # Create a log file ----
