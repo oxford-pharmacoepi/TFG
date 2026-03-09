@@ -1,11 +1,4 @@
-
-# Check code_to_run inputs ----
-omopgenerics::validateCdmArgument(cdm,
-                                  requiredTables = c("person",
-                                                     "observation_period",
-                                                     "condition_occurrence",
-                                                     "drug_exposure",
-                                                     "concept"))
+                                                 "concept"))
 omopgenerics::assertNumeric(min_cell_count)
 
 # Create a log file ----
@@ -31,7 +24,7 @@ logMessage("Study cohorts instantiated")
 
 # Cohort counts and attrition ----
 # results[["counts"]] <- summariseCohortCount("...")
-results[["attrition"]] <- summariseCohortAttrition(cdm$vaccine_camp)
+results[["attrition"]] <- summariseCohortAttrition(cdm$vaccine_camp_fin)
 
 # Run analyses ----
 logMessage("Run study analyses")

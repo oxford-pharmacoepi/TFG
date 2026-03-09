@@ -19,10 +19,11 @@ library(odbc)
 library(RPostgres)
 library(readr)
 library(purrr)
+library(modeltools)
 
 # database metadata and connection details
 # The name/ acronym for the database
-dbName <- ""
+dbName <- Sys.getenv("DB_NAME")
 
 # Database connection details
 # In this study we also use the DBI package to connect to the database
@@ -39,19 +40,23 @@ dbName <- ""
 #   user = user,
 #   password = password
 # )
-db <- dbConnect()
+db <- DBI::dbConnect(RPostgres::Postgres(),
+                     dbname = dbName,
+                     host = Sys.getenv("DB_HOST"),
+                     user = Sys.getenv("DB_USER"),
+                     password = Sys.getenv("DB_PASSWORD"))
 
 # The name of the schema that contains the OMOP CDM with patient-level data
-cdmSchema <- ""
+cdm_schema <- Sys.getenv("cdm_schema")
 
 # A prefix for all permanent tables in the database
-writePrefix <- ""
+write_prefix <- Sys.getenv("write_schema")
 
 # The name of the schema where results tables will be created
-writeSchema <- ""
+write_schema <- Sys.getenv("write_schema")
 
 # The name of the schema where the achilles tables are
-achillesSchema <- ""
+achilles_schema <- Sys.getenv("achilles_schema")
 
 # minimum counts that can be displayed according to data governance
 minCellCount <- 5
@@ -59,11 +64,11 @@ minCellCount <- 5
 # Create cdm object ----
 cdm <- cdmFromCon(
   con = db,
-  cdmSchema = cdmSchema,
-  writeSchema = writeSchema,
-  writePrefix = writePrefix,
+  cdmSchema = cdm_schema,
+  writeSchema = write_schema,
+  writePrefix = write_prefix,
   cdmName = dbName,
-  achillesSchema = achillesSchema
+  achillesSchema = achilles_schema
 )
 
 # Run study ----

@@ -6,18 +6,19 @@ if(!dir.exists(resultsFolder)){
 
 createLogFile(logFile = tempfile(pattern = "log_{date}_{time}"))
 logMessage("LOG CREATED")
-
+library(ParallelLogger)
 # run ----
+source(here("codelist", "codelist_creation.R"))
 source(here("cohorts", "instantiate_cohorts.R"))
-info(logger, "- Running PhenotypeDiagnostics")
-diagnostics <- phenotypeDiagnostics(cdm$study_cohorts,
-                          survival = FALSE,
-                          cohortSample = 20000,
-                          matchedSample = NULL,
-                          populationSample = NULL)
+logInfo("- Running PhenotypeDiagnostics")
+diagnostics <- phenotypeDiagnostics(cdm$all_cohorts,
+                          survival = FALSE)
 
 exportSummarisedResult(diagnostics,
                        minCellCount = minCellCount,
                        fileName = "phenotyper_results_{cdm_name}_{date}.csv",
-                       path = results_folder)
+                       path = here("results")
+                       )
+shinyDiagnostics(result = diagnostics, directory = here(".."), open = TRUE)
+runApp()
 logMessage("Finished")
