@@ -76,12 +76,12 @@ cdm$vaccine_90_dose <-cdm$vaccine_90 |>
 #  ) |>
 #  collect(name=x_dose)
 
-cdm$immun_cond <- conceptCohort(cdm = cdm,
-                           conceptSet = list(
-                             "immunosupressed" =
-                               immun),
-                           name = "immun"
-)
+# cdm$immun_cond <- conceptCohort(cdm = cdm,
+#                            conceptSet = list(
+#                              "immunosupressed" =
+#                                immun),
+#                            name = "immun"
+# )
 
 # cdm$vaccine_camp_immc <- cdm$vaccine_camp |>
 #   requireConceptIntersect(
@@ -188,11 +188,17 @@ cdm$vaccine_age <- cdm$vaccine_age_75|>
   compute(name="vaccine_age")
   #recordCohortAttrition(reason="vaccine_age") 
 
-cdm$vaccine_elligible <- full_join(cdm$vaccine_camp_imm_coh, 
+cdm$vaccine_eligible <- full_join(cdm$vaccine_camp_imm_coh, 
                                   cdm$vaccine_age)|>
-  compute(name="vaccine_elligible")
+  compute(name="vaccine_eligible")
   
-cdm$vaccine_camp_fin <- inner_join(cdm$vaccine_camp, cdm$vaccine_elligible) |>
+cdm$vaccine_camp_fin <- inner_join(cdm$vaccine_camp, cdm$vaccine_eligible) |>
   compute(name="vaccine_camp_fin")  |>
-  recordCohortAttrition(reason="elligibles") 
-  
+  recordCohortAttrition(reason="eligibles") 
+
+cdm$vaccine_camp <- cdm$vaccine_camp |>
+  left_join(cdm$person|>rename(subject_id=person_id, 
+                                ethnicity=race_source_value)|>
+              select(subject_id, ethnicity),
+            by="subject_id") |> 
+  addSex()

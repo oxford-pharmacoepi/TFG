@@ -1,4 +1,4 @@
-characterisationRegion <- cdm$vaccine_camp |>
+characterisation <- cdm$vaccine_camp |>
   summariseCharacteristics(
     strata=list("vaccination_campaign"),
     cohortIntersectCount = list(
@@ -7,15 +7,25 @@ characterisationRegion <- cdm$vaccine_camp |>
         window = list("number_of_prior_vaccines" = c(-Inf, -1))
       )
     ),
-    
-    ageGroup = list("kids" = c(0, 17), adults = c(18, Inf)),
+
+  #ageGroup = list("kids" = c(0, 17), adults = c(18, Inf)),
     tableIntersectCount = list(
       "Number visits in the prior year" = list(
         tableName = "visit_occurrence",
         window = c(-365, -1)
       )
     ),
-    otherVariables = "region"
+  cohortIntersectFlag = list(
+    eligibles_age = list(
+      targetCohortTable = "vaccine_age",
+      window = c(0, 0)
+    ),
+    eligibles_immunosupressed = list(
+      targetCohortTable = "vaccine_camp_imm",
+      window = c(0, 0)
+    )
+  ),
+    otherVariables = c("region", "ethnicity", "sex")
   )
 
 # characterisationRegCamp <- cdm$vaccine_camp |>
@@ -32,8 +42,8 @@ characterisationRegion <- cdm$vaccine_camp |>
 #     )
 #   )
 
-LargeScaleCharacteristics <- summariseLargeScaleCharacteristics(
-  cdm$vaccine_camp,
+largeScaleCharacteristics <- summariseLargeScaleCharacteristics(
+  cdm$vaccine_camp_fin,
   strata = "vaccination_campaign",
   window = list(c(-Inf, -366), c(-365, 0), c(1, 365),
                 c(366, Inf)),

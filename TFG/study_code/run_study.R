@@ -19,6 +19,7 @@ results[["obs_period"]] <- summariseObservationPeriod(cdm$observation_period)
 
 # Instantiate study cohorts ----
 logMessage("Instantiating study cohorts")
+source(here("codelist", "codelist_creation.R"))
 source(here("cohorts", "instantiate_cohorts.R"))
 logMessage("Study cohorts instantiated")
 
@@ -36,8 +37,8 @@ results[["log"]] <- summariseLogFile(cdmName = omopgenerics::cdmName(cdm))
 
 # Finish ----
 results$largeScale              <- LargeScaleCharacteristics
-results$characterisationRegCamp <- characterisationRegCamp
-results$characterisationRegion  <- characterisationRegion
+#results$characterisationRegCamp <- characterisationRegCamp
+results$characterisation <- characterisation
 
 results_exp <- results |>
   vctrs::list_drop_empty() |>
