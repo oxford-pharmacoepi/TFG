@@ -21,7 +21,7 @@ characterisation <- cdm$vaccine_camp |>
       window = c(0, 0)
     ),
     eligibles_immunosupressed = list(
-      targetCohortTable = "vaccine_camp_imm",
+      targetCohortTable = "vaccine_camp_imm_coh",
       window = c(0, 0)
     )
   ),
