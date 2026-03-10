@@ -227,4 +227,14 @@ cdm$vaccine_camp_d <- cdm$vaccine_camp |> left_join(
 
 # cdm$vaccine_camp_d <- cdm$vaccine_camp_d |>
 #   mutate(deprivation_index=as.character(deprivation_index))
-  
+
+df <- cdm$vaccine_camp_d |> collect()
+
+df <- df |>
+  mutate(
+    deprivation_index = factor(
+      deprivation_index,
+      levels = as.character(1:10),
+      ordered = TRUE
+    )
+  )
