@@ -35,17 +35,16 @@ logMessage("Analyses finished")
 results[["log"]] <- summariseLogFile(cdmName = omopgenerics::cdmName(cdm))
 
 # Finish ----
-results$largeScale              <- LargeScaleCharacteristics
-#results$characterisationRegCamp <- characterisationRegCamp
+results$largeScale <- LargeScaleCharacteristics
 results$characterisation <- characterisation
 
-results_exp <- results |>
+results <- results |>
   vctrs::list_drop_empty() |>
   omopgenerics::bind()
-exportSummarisedResult(results_exp,
+exportSummarisedResult(results,
                        minCellCount = min_cell_count,
                        fileName = "results_{cdm_name}_{date}.csv",
                        path = here("Results"))
-write.csv(x_dose, "Results/plot_dose.csv", row.names = FALSE)
+#write.csv(x_dose, "Results/plot_dose.csv", row.names = FALSE)
 cli::cli_alert_success("Study finished")
 
