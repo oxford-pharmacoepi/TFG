@@ -221,5 +221,10 @@ cdm$vaccine_camp_d <- cdm$vaccine_camp |> left_join(
   cdm$measurement |>     
     filter(measurement_concept_id== "715996")|>
     select(person_id, value_as_number)|>
-    rename(subject_id=person_id, deprivation_index=value_as_number), 
-    by="subject_id")
+    rename(subject_id=person_id, deprivation_index=value_as_number),
+    by="subject_id")|>
+    compute(name="vaccine_camp_d")
+
+# cdm$vaccine_camp_d <- cdm$vaccine_camp_d |>
+#   mutate(deprivation_index=as.character(deprivation_index))
+  

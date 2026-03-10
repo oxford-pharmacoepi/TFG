@@ -1,4 +1,4 @@
-characterisation <- cdm$vaccine_camp_d |>
+characterisation <- df |>
   summariseCharacteristics(
     strata=list("vaccination_campaign"),
     cohortIntersectCount = list(
