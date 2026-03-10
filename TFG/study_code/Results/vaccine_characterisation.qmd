@@ -1,0 +1,27 @@
+---
+title: "Getting started"
+format: html
+---
+
+## Vaccine Characterisation
+
+```{r, echo=FALSE, eval = TRUE, message=FALSE, warning=FALSE}
+# load results
+library(omopgenerics)
+library(here)
+results <- importSummarisedResult(path = here("vaccine"))
+```
+
+### Attrition plot
+
+```{r, echo=FALSE}
+library(CohortCharacteristics)
+plotCohortAttrition(result = results)
+```
+
+### Vaccine Characterisation
+
+```{r, echo=FALSE}
+#library(CohortCharacteristics)
+#tableCharacteristics(result = results, header="Vaccination campaign")
+```
