@@ -217,3 +217,9 @@ cdm$vaccine_camp <- cdm$vaccine_camp |>
 #   tally()
 # we get 85 (85+43 =128) GOOD
 
+cdm$vaccine_camp_d <- cdm$vaccine_camp |> left_join(
+  cdm$measurement |>     
+    filter(measurement_concept_id== "715996")|>
+    select(person_id, value_as_number)|>
+    rename(subject_id=person_id, deprivation_index=value_as_number), 
+    by="subject_id")

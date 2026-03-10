@@ -1,4 +1,4 @@
-characterisation <- cdm$vaccine_camp |>
+characterisation <- cdm$vaccine_camp_d |>
   summariseCharacteristics(
     strata=list("vaccination_campaign"),
     cohortIntersectCount = list(
@@ -25,7 +25,7 @@ characterisation <- cdm$vaccine_camp |>
       window = c(0, 0)
     )
   ),
-    otherVariables = c("region", "ethnicity", "sex")
+    otherVariables = c("region", "ethnicity", "sex", "deprivation_index")
   )
 
 # characterisationRegCamp <- cdm$vaccine_camp |>
