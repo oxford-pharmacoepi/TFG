@@ -25,7 +25,7 @@ characterisation <- cdm$vaccine_camp_d |>
       window = c(0, 0)
     )
   ),
-    otherVariables = c("region", "ethnicity", "sex", "deprivation_index")
+    otherVariables = c("region", "ethnicity", "sex", "imd")
   )
 
 # characterisationRegCamp <- cdm$vaccine_camp |>
@@ -43,7 +43,7 @@ characterisation <- cdm$vaccine_camp_d |>
 #   )
 
 largeScaleCharacteristics <- summariseLargeScaleCharacteristics(
-  cdm$vaccine_camp_fin,
+  cdm$vaccine_camp_d,
   strata = "vaccination_campaign",
   window = list(c(-Inf, -366), c(-365, 0), c(1, 365),
                 c(366, Inf)),

@@ -36,7 +36,7 @@ cdm$vaccine_camp <- cdm$vaccine_90 |>
     cohort_start_date>=as.Date("2024-04-15") & cohort_start_date<=as.Date("2024-06-03") ~ "S_2024",
     cohort_start_date>=as.Date("2024-08-03") & cohort_start_date<=as.Date("2024-12-20") ~ "A_2024",
     cohort_start_date>=as.Date("2025-04-01") & cohort_start_date<=as.Date("2025-06-01") ~ "S_2025",
-    cohort_start_date>=as.Date("2025-07-01") & cohort_start_date<=as.Date("2026-01-01") ~ "A_2025"),
+    cohort_start_date>=as.Date("2025-07-01") & cohort_start_date<=as.Date("2026-01-01") ~ "A_2025")
   )|>
   filter(!is.na(vaccination_campaign))|>
   left_join(
@@ -221,20 +221,14 @@ cdm$vaccine_camp_d <- cdm$vaccine_camp |> left_join(
   cdm$measurement |>     
     filter(measurement_concept_id== "715996")|>
     select(person_id, value_as_number)|>
-    rename(subject_id=person_id, deprivation_index=value_as_number),
+    rename(subject_id=person_id, imd=value_as_number),
     by="subject_id")|>
+    mutate(imd = case_when(
+    imd %in% c(1,2) ~ "Q1",
+    imd %in% c(3,4) ~ "Q2",
+    imd %in% c(5,6) ~ "Q3",
+    imd %in% c(7,8) ~ "Q4",
+    imd %in% c(9,10) ~ "Q5")
+    )|>
     compute(name="vaccine_camp_d")
 
-# cdm$vaccine_camp_d <- cdm$vaccine_camp_d |>
-#   mutate(deprivation_index=as.character(deprivation_index))
-
-df <- cdm$vaccine_camp_d |> collect()
-
-df <- df |>
-  mutate(
-    deprivation_index = factor(
-      deprivation_index,
-      levels = as.character(1:10),
-      ordered = TRUE
-    )
-  )
