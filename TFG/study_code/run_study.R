@@ -19,7 +19,9 @@ results[["obs_period"]] <- summariseObservationPeriod(cdm$observation_period)
 # Instantiate study cohorts ----
 logMessage("Instantiating study cohorts")
 source(here("codelist", "codelist_creation.R"))
+source(here("cohorts", "functions.R"))
 source(here("cohorts", "instantiate_cohorts.R"))
+source(here("cohorts", "all.R"))
 logMessage("Study cohorts instantiated")
 
 # Cohort counts and attrition ----
@@ -37,6 +39,7 @@ results[["log"]] <- summariseLogFile(cdmName = omopgenerics::cdmName(cdm))
 # Finish ----
 results$largeScale <- LargeScaleCharacteristics
 results$characterisation <- characterisation
+results$characterisation_a <- characterisation_a
 
 results <- results |>
   vctrs::list_drop_empty() |>
@@ -45,6 +48,11 @@ exportSummarisedResult(results,
                        minCellCount = min_cell_count,
                        fileName = "results_{cdm_name}_{date}.csv",
                        path = here("Results"))
+
+# Results to save as csv and plot ----
+#source(here("analyses", "docs_to_plot.R"))
 #write.csv(x_dose, "Results/plot_dose.csv", row.names = FALSE)
+#write.csv(x, "Results/plot_dose.csv", row.names = FALSE)
+
 cli::cli_alert_success("Study finished")
 
