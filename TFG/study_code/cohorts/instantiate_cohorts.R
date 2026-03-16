@@ -15,13 +15,13 @@ cdm$vaccine_90 <- cdm$vaccine |>
 
 
 cdm$vaccine_camp <- cdm$vaccine_90 |> 
-  filter(cohort_start_date>as.Date("2023-08-02") & cohort_start_date<as.Date("2026-01-01"))|>
+  filter(cohort_start_date>as.Date("2023-10-02") & cohort_start_date<as.Date("2026-01-31"))|>
   mutate(vaccination_campaign = case_when(
-    cohort_start_date>=as.Date("2023-08-02") & cohort_start_date<=as.Date("2024-01-31") ~ "A_2023",
-    cohort_start_date>=as.Date("2024-04-15") & cohort_start_date<=as.Date("2024-06-03") ~ "S_2024",
-    cohort_start_date>=as.Date("2024-08-03") & cohort_start_date<=as.Date("2024-12-20") ~ "A_2024",
-    cohort_start_date>=as.Date("2025-04-01") & cohort_start_date<=as.Date("2025-06-01") ~ "S_2025",
-    cohort_start_date>=as.Date("2025-07-01") & cohort_start_date<=as.Date("2026-01-01") ~ "A_2025")
+    cohort_start_date>=as.Date("2023-10-02") & cohort_start_date<=as.Date("2024-01-31") ~ "A_2023",
+    cohort_start_date>=as.Date("2024-04-15") & cohort_start_date<=as.Date("2024-06-30") ~ "S_2024",
+    cohort_start_date>=as.Date("2024-10-03") & cohort_start_date<=as.Date("2025-01-31") ~ "A_2024",
+    cohort_start_date>=as.Date("2025-04-01") & cohort_start_date<=as.Date("2025-06-17") ~ "S_2025",
+    cohort_start_date>=as.Date("2025-09-01") & cohort_start_date<=as.Date("2026-01-31") ~ "A_2025")
   )|>
   filter(!is.na(vaccination_campaign))|>
   left_join(
@@ -34,65 +34,15 @@ cdm$vaccine_90_dose <-cdm$vaccine_90 |>
   group_by(subject_id) |>
   arrange(cohort_start_date) |> 
   mutate( 
-    "dose" = paste(row_number(),"dose")
+    "n_dose_subject" = paste(row_number(), "dosis")
         ) |>
   ungroup() |>
-  group_by(cohort_start_date, dose) |>
+  group_by(cohort_start_date, n_dose_subject) |>
   add_tally()|>
-  ungroup()|> arrange(cohort_start_date)|>
+  ungroup()|> 
+  arrange(cohort_start_date)|>
+  rename(n_dose=n)|>
   compute(name="vaccine_90_dose")
-
-# cdm$immun_cond <- conceptCohort(cdm = cdm,
-#                            conceptSet = list(
-#                              "immunosupressed" =
-#                                immun),
-#                            name = "immun"
-# )
-
-# cdm$vaccine_camp_immc <- cdm$vaccine_camp |>
-#   requireConceptIntersect(
-#     conceptSet = list( "immuno_cond"=
-#        c(codelist$hiv_aids, 
-#          codelist$intrinsec_immune,
-#          codelist$scid,
-#          codelist$cancerexcludnonmelaskincancer
-#       )
-#     ),
-#     window = list(
-#       "last_year" = c(-365, 0)
-#     ),
-#     intersections = c(1, Inf),
-#     name="vaccine_camp_immc"
-#   )
-# 
-# cdm$vaccine_camp_imma <- cdm$vaccine_camp |>
-#   requireConceptIntersect(conceptSet = list("immuno_agent"=
-#                                               c(codelist$intrinsec_immune,
-#                                                 codelist$intrinsec_antineo,
-#                                                 codelist$intrinsec_antineo_exclude
-#                                               )
-#                           ),
-#                           window = list(
-#                             "last_1_2year" = c(-183, 0)
-#                           ),
-#                           intersections = c(1, Inf),
-#                           name="vaccine_camp_imma"
-#   )
-# 
-# cdm$vaccine_camp_syst <- cdm$vaccine_camp |>
-#   requireConceptIntersect(conceptSet = list("immuno_condsyst"=
-#                                               codelist$syst_corticosteriods
-#                                             ),
-#                           window=c (-Inf,0)
-#   ) |> 
-#   requireConceptIntersect(conceptSet=list("immuno_agsyst"=
-#                                             codelist$transplant),
-#                           window = list(
-#                             "last_year" = c(-365, 0)
-#                           ),
-#                           intersections = c(1, Inf),
-#                           name="vaccine_camp_syst"
-#   )
 
 cdm$vaccine_camp_imm <- cdm$vaccine_camp |>
   addConceptIntersectFlag(conceptSet = list("immuno_condsyst"=
@@ -162,10 +112,12 @@ cdm$vaccine_camp_fin <- inner_join(cdm$vaccine_camp, cdm$vaccine_eligible) |>
   compute(name="vaccine_camp_fin")  |>
   recordCohortAttrition(reason="eligibles") 
 
-cdm$vaccine_camp <- cdm$vaccine_camp |>
+cdm$vaccine_camp_d <- cdm$vaccine_camp |>
   left_join(eth,
             by="subject_id") |> 
-  addSex()
+  addSex()|> left_join(
+    imd, by="subject_id")|>
+  compute(name="vaccine_camp_d")
 
 # cdm$vaccine_camp_imm_coh|>tally(): 128
 # cdm$vaccine_age|>tally(): 4596
@@ -181,7 +133,7 @@ cdm$vaccine_camp <- cdm$vaccine_camp |>
 #   tally()
 # we get 85 (85+43 =128) GOOD
 
-cdm$vaccine_camp_d <- cdm$vaccine_camp |> left_join(
-  imd, by="subject_id")|>
-    compute(name="vaccine_camp_d")
+# cdm$vaccine_camp_d <- cdm$vaccine_camp |> left_join(
+#   imd, by="subject_id")|>
+#     compute(name="vaccine_camp_d")
 

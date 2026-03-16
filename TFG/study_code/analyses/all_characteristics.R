@@ -1,4 +1,4 @@
-characterisation_a <- cdm$all_d |>
+characterisation_a <- cdm$all_denom |>
   summariseCharacteristics(
     tableIntersectCount = list(
       "Number visits in the prior year" = list(

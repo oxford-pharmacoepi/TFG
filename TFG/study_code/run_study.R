@@ -27,10 +27,12 @@ logMessage("Study cohorts instantiated")
 # Cohort counts and attrition ----
 # results[["counts"]] <- summariseCohortCount("...")
 results[["attrition"]] <- summariseCohortAttrition(cdm$vaccine_camp_fin)
+results[["attrition_a"]] <- summariseCohortAttrition(cdm$all_denom)
 
 # Run analyses ----
 logMessage("Run study analyses")
-source(here("analyses", "cohort_characteristics.R"))
+source(here("analyses", "vaccine_characteristics.R"))
+source(here("analyses", "all_characteristics.R"))
 logMessage("Analyses finished")
 
 # Capture log file ----
@@ -51,8 +53,8 @@ exportSummarisedResult(results,
 
 # Results to save as csv and plot ----
 #source(here("analyses", "docs_to_plot.R"))
+#write.csv(x_90, "Results/plot_90.csv", row.names = FALSE)
 #write.csv(x_dose, "Results/plot_dose.csv", row.names = FALSE)
-#write.csv(x, "Results/plot_dose.csv", row.names = FALSE)
 
 cli::cli_alert_success("Study finished")
 
