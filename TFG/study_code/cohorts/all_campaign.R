@@ -6,36 +6,75 @@ cdm$demo <- demographicsCohort(
     name = "demo"
 )
 
+campaign<- "A_2023"
 cdm$campaign1 <- cdm$demo |>
-  requireInDateRange(
-    dateRange=as.Date(c("2022-10-02", "2023-31-01")),
-    indexDate = "cohort_start_date",
-    atFirst = FALSE
-  )|>
-  requireInDateRange(
-    dateRange=as.Date(c("2023-10-02", "2024-31-01")),
-    indexDate = "cohort_end_date",
-    atFirst = FALSE
-  )|>
-  requireDuration(
-    daysInCohort = c(365, Inf)
-  )|>
-  trimToDateRange(
-    dateRange = as.Date(c("2023-10-02", "2023-10-02")),
-    name = "campaign1"
-  ) |>
-  addImmunosuppresed() |>
+  requireObs(campaign)|>
+  addImmunosuppressed() |>
   addAge() |>
-  filter(age >= 65 | immunosuppressed == 1) |>
-  compute(name = "campaign1") |>
+  compute(name = "campaign1") |> 
+  filter(age >= 65L | immunosuppressed == 1L) |>
   recordCohortAttrition(reason = "Inclusion criteria") |>
   addRegion() |>
   addIMD() |>
   addEthnicity() |>
-  addSex(name = "campaign1") #|>
-  #addVaccinated(vaccine_camp_fin)
+  addSex(name = "campaign1") |>
+  addVaccinated(cdm$vaccine_camp_fin, campaign) |>
+  compute(name = "campaign1")|>
+  addDateNonVaccinated(campaign) |>
+  compute(name = "campaign1")
 
-cdm <- bind(cdm$campaign1, 
+campaign<- "S_2024"
+cdm$campaign1 <- cdm$demo |>
+  requireObs(campaign)|>
+  addImmunosuppressed() |>
+  addAge() |>
+  compute(name = "campaign2") |> 
+  filter(age >= 75L | immunosuppressed == 1L) |>
+  recordCohortAttrition(reason = "Inclusion criteria") |>
+  addRegion() |>
+  addIMD() |>
+  addEthnicity() |>
+  addSex(name = "campaign2") |>
+  addVaccinated(cdm$vaccine_camp_fin, campaign) |>
+  compute(name = "campaign2")|>
+  addDateNonVaccinated(campaign) |>
+  compute(name = "campaign2")
+
+campaign<- "A_2024"
+cdm$campaign1 <- cdm$demo |>
+  requireObs(campaign)|>
+  addImmunosuppressed() |>
+  addAge() |>
+  compute(name = "campaign3") |> 
+  filter(age >= 75L | immunosuppressed == 1L) |>
+  recordCohortAttrition(reason = "Inclusion criteria") |>
+  addRegion() |>
+  addIMD() |>
+  addEthnicity() |>
+  addSex(name = "campaign3") |>
+  addVaccinated(cdm$vaccine_camp_fin, campaign) |>
+  compute(name = "campaign3")|>
+  addDateNonVaccinated(campaign) |>
+  compute(name = "campaign3")
+
+campaign<- "S_2025"
+cdm$campaign1 <- cdm$demo |>
+  requireObs(campaign)|>
+  addImmunosuppressed() |>
+  addAge() |>
+  compute(name = "campaign4") |> 
+  filter(age >= 75L | immunosuppressed == 1L) |>
+  recordCohortAttrition(reason = "Inclusion criteria") |>
+  addRegion() |>
+  addIMD() |>
+  addEthnicity() |>
+  addSex(name = "campaign4") |>
+  addVaccinated(cdm$vaccine_camp_fin, campaign) |>
+  compute(name = "campaign4")|>
+  addDateNonVaccinated(campaign) |>
+  compute(name = "campaign4")
+
+cdm$cdm <- bind(cdm$campaign1, 
             cdm$campaign2, 
             cdm$campaign3,
             cdm$campaign4,

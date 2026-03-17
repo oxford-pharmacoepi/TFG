@@ -41,56 +41,56 @@ addEthnicity <- function(cohort){
 }
 
 
-addImmunosuppresed <- function(cohort) {
+addImmunosuppressed <- function(cohort) {
   cohort |>
-    addConceptIntersectFlag(conceptSet = list("immuno_condsyst"=
-                                                codelist$syst_corticosteriods
-    ),
-    window=c (-Inf,0)
-    ) |> 
-    addConceptIntersectFlag(conceptSet=list("immuno_agsyst"=
-                                              codelist$transplant),
-                            window = list(
-                              "last_year" = c(-365, 0)
-                            )
-    )|>
-    addConceptIntersectFlag(conceptSet = list("immuno_agent"=
-                                                c(codelist$intrinsec_immune,
-                                                  codelist$intrinsec_antineo,
-                                                  codelist$intrinsec_antineo_exclude
-                                                )
-    ),
-    window = list(
-      "last_1_2year" = c(-183, 0)
-    )
-    ) |>
-    addConceptIntersectFlag(
-      conceptSet = list( "immuno_cond"=
-                           c(codelist$hiv_aids, 
-                             codelist$intrinsec_immune,
-                             codelist$scid,
-                             codelist$cancerexcludnonmelaskincancer
-                           )
+       addConceptIntersectFlag(conceptSet = list("immuno_condsyst"=
+                                                   codelist$syst_corticosteriods
+       ),
+      window=c (-Inf,0)
+      ) |>
+      addConceptIntersectFlag(conceptSet=list("immuno_agsyst"=
+                                                codelist$transplant),
+                              window = list(
+                                "last_year" = c(-365, 0)
+                              )
+      )|>
+      addConceptIntersectFlag(conceptSet = list("immuno_agent"=
+                                                  c(codelist$intrinsec_immune,
+                                                    codelist$intrinsec_antineo,
+                                                    codelist$intrinsec_antineo_exclude
+                                                  )
       ),
       window = list(
-        "last_year" = c(-365, 0)
+        "last_1_2year" = c(-183, 0)
       )
-    ) |> 
-    mutate("immunosupressed"= if_else(
-      immuno_condsyst_minf_to_0 !="1" & immuno_agsyst_last_year!="1" |
-        immuno_agent_last_1_2year !="1" | immuno_cond_last_year !="1", 1L, 0L)
-    ) |>
-    select(-immuno_agent_last_1_2year,-immuno_cond_last_year, -immuno_agsyst_last_year, -immuno_condsyst_minf_to_0)
-}
+      ) |>
+      addConceptIntersectFlag(
+        conceptSet = list( "immuno_cond"=
+                             c(codelist$hiv_aids,
+                               codelist$intrinsec_immune,
+                               codelist$scid,
+                               codelist$cancerexcludnonmelaskincancer
+                             )
+        ),
+        window = list(
+          "last_year" = c(-365, 0)
+        )
+      ) |>
+      mutate("immunosuppressed"= if_else(
+        immuno_condsyst_minf_to_0 !="1" & immuno_agsyst_last_year!="1" |
+          immuno_agent_last_1_2year !="1" | immuno_cond_last_year !="1", 1L, 0L)
+      ) |>
+      select(-immuno_agent_last_1_2year,-immuno_cond_last_year, -immuno_agsyst_last_year, -immuno_condsyst_minf_to_0)
+  }
 
-vaccinated <- function(cohort, vaccine_camp_fin){
-  cohort|>
-    addCohortIntersectFlag(targetCohortTable=vaccine_camp_fin,
-                           window = list(c(0, 120), 
-                           nameStyle = "{cohort_name}_{window_name}"))|>
-    filter("{cohort_name}_{window_name}"==1L)|>
-    select(-"{cohort_name}_{window_name}")
-}
+  vaccinated <- function(cohort, vaccine_camp_fin){
+    cohort|>
+      addCohortIntersectFlag(targetCohortTable=vaccine_camp_fin,
+                             window = list(c(0, 120),
+                             nameStyle = "{cohort_name}_{window_name}"))|>
+      filter("{cohort_name}_{window_name}"==1L)|>
+      select(-"{cohort_name}_{window_name}")
+  }
 
 addCampaigns <- function(cohort){
   cohort|>
@@ -120,29 +120,66 @@ addDose <- function(cohort){
   rename(n_dose=n)
 }
 
-addVaccinated <- function(cohort, cohort_vaccinated){
-  cohort|> left_join(
-    cohort_vaccinated,
+addVaccinated <- function(cohort_all, cohort_vaccinated, campaign){
+  cohort_all|> 
+    select(subject_id, cohort_definition_id)|>
+    left_join(
+    cohort_vaccinated|>
+      filter(vaccination_campaign == campaign)|>
+      select(-cohort_definition_id),
     by="subject_id"
   ) |>
     mutate(vaccinated=if_else(
-      !is.na(vaccinated_campaign, 1L, 0L)
-    ))
-    # mutate(vaccination_campaign=case_when(
-    #   cohort_start_date==as.Date("2023-10-02"), ~ "A_2023",
-    #   cohort_start_date==as.Date("2024-04-15"), ~ "S_2024",
-    #   cohort_start_date==as.Date("2024-10-03"), ~ "A_2024",
-    #   cohort_start_date==as.Date("2025-04-01"), ~ "S_2025",
-    #   cohort_start_date==as.Date("2025-09-01"), ~ "A_2025"
-    # ))|>
-    # filter(!is.na(vaccination_campaign))|>
-    # select(-cohort_start_date, -cohort_end_date)|> #trim dates?
-    # left_join(cohort_vaccinated, by=c("subject_id", "vaccination_campaign")
-    #           )|>
-    # addCohortIntersectFlag(
-    #   targetCohortTable = cohort_vaccinated |>
-    #     select(vaccination_campaign),  
-    #   window = c(0, 0), 
-    #   nameStyle = "{cohort_name}_{window_name}"
-    # ) 
+      !is.na(cohort_start_date), 1L, 0L)
+    )
 }
+
+addDateNonVaccinated <- function(cohort, campaign){
+  cohort|>
+    select(subject_id, cohort_start_date, cohort_end_date, cohort_definition_id) |>
+    filter(!is.na(cohort_start_date)) |>
+           full_join(cohort |> 
+                       select(subject_id, cohort_start_date, cohort_end_date, cohort_definition_id) |>
+                       filter(is.na(cohort_start_date)) |>
+                       mutate(cohort_start_date=case_when(
+                         campaign == "A_2023" ~ as.Date("2023-10-02"),
+                         campaign == "S_2024" ~ as.Date("2024-04-15"),
+                         campaign == "A_2024" ~ as.Date("2024-10-03"),
+                         campaign == "S_2025" ~ as.Date("2025-04-01"),
+                         campaign == "A_2025" ~ as.Date("2025-09-01"))) |>
+                       mutate(cohort_end_date= cohort_start_date)
+           ) |>
+    right_join(cohort|>
+                 select(-cohort_start_date, -cohort_end_date),
+               by= c("subject_id", "cohort_definition_id")
+    )
+} 
+
+requireObs <- function(cohort, campaign){
+  start <- case_when(
+        campaign == "A_2023" ~ as.Date("2023-01-31"),
+        campaign == "S_2024" ~ as.Date("2023-06-30"),
+        campaign == "A_2024" ~ as.Date("2024-01-31"),
+        campaign == "S_2025" ~ as.Date("2024-06-17"),
+        campaign == "A_2025" ~ as.Date("2025-01-31"))
+
+  end <- case_when(
+        campaign == "A_2023" ~ as.Date("2023-10-02"),
+        campaign == "S_2024" ~ as.Date("2024-04-15"),
+        campaign == "A_2024" ~ as.Date("2024-10-03"),
+        campaign == "S_2025" ~ as.Date("2025-04-01"),
+        campaign == "A_2025" ~ as.Date("2025-09-01"))
+
+  cohort|>
+      requireInDateRange(
+      dateRange=as.Date(c(NA, start)),
+      indexDate = "cohort_start_date"
+    )|>
+      requireInDateRange(
+        dateRange=as.Date(c(end, NA)),
+        indexDate = "cohort_end_date"
+      )|>
+      requireDuration(
+        daysInCohort = c(365, Inf)
+      )
+  }
