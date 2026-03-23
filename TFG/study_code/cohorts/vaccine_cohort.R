@@ -13,17 +13,19 @@ cdm$vaccine_90 <- conceptCohort(cdm = cdm,
 
 cdm$vaccine_camp <- cdm$vaccine_90 |> 
   addCampaigns()|>
-  recordCohortAttrition(reason="vaccine_campaigns") |>
+  #recordCohortAttrition(reason="vaccine_campaigns") |>
   compute(name = "vaccine_camp") 
 
 cdm$vaccine_90_dose <-cdm$vaccine_90 |>
   addDose()|>
+  compute(name="vaccine_90_dose")|>
+  addCampaigns()|>
   compute(name="vaccine_90_dose")
 
 cdm$vaccine_camp_imm <- cdm$vaccine_camp|>
-  addImmunosuppresed()|>
-  compute(name="vaccine_camp") |> #sense aquesta linea no funciona? NO
-  filter(immunosupressed == 1L)|>
+  addImmunosuppressed()|>
+  compute(name="vaccine_camp_imm") |> #sense aquesta linea no funciona? NO
+  filter(immunosuppressed == 1L)|>
   compute(name="vaccine_camp_imm")
 
 cdm$vaccine_age <- cdm$vaccine_camp |>
@@ -42,11 +44,10 @@ cdm$vaccine_age <- cdm$vaccine_camp |>
 
 cdm$vaccine_eligible <- full_join(cdm$vaccine_camp_imm, 
                                   cdm$vaccine_age)|>
+  mutate(immunosuppressed=if_else(is.na(immunosuppressed), 0L, 1L)) |>
   compute(name="vaccine_eligible")
 
-cdm$vaccine_camp_fin <- inner_join(cdm$vaccine_camp|>
-                                     compute(name="vaccine_camp")|>
-                                     select(-immunosupressed)
+cdm$vaccine_camp_fin <- inner_join(cdm$vaccine_camp 
                                    , cdm$vaccine_eligible) |>
   compute(name="vaccine_camp_fin")  |>
   recordCohortAttrition(reason="eligibles") 
@@ -54,6 +55,6 @@ cdm$vaccine_camp_fin <- inner_join(cdm$vaccine_camp|>
 cdm$vaccine_camp_d <- cdm$vaccine_camp |>
   addEthnicity() |> 
   addSex()|> 
-  addIMD|>
+  addIMD()|>
   compute(name="vaccine_camp_d")
 

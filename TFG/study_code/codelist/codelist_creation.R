@@ -11,14 +11,14 @@ test <- unique(c(codelist$covid_test_antibody, codelist$covid_test))
 immun <- unique(c(codelist$hiv_aids, 
                   codelist$cancerexcludnonmelaskincancer,
                   codelist$scid,
-                  
                   codelist$intrinsec_immune,
-                  codelist$intrinsec_antineo,
-                  codelist$intrinsec_antineo_exclude,
+                  
+                  codelist$inmmunos_antineo,
+                  codelist$immunos_antineo_exclude,
                 
                   codelist$syst_corticosteriods,
                   codelist$transplant
                   )
                )
-vac <- unique(codelists$covid_vaccine)
+vac <- unique(codelist$covid_vaccine)
 
