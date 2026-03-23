@@ -1,7 +1,7 @@
 omopgenerics::assertNumeric(min_cell_count)
 
 # Create a log file ----
-createLogFile(logFile = tempfile(pattern = "log_{date}_{time}"))
+createLogFile(logFile = here("Results", "log_{date}_{time}")))
 logMessage("LOG CREATED")
 
 # Define analysis settings -----
