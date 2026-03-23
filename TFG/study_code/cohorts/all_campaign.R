@@ -6,18 +6,16 @@ cdm$demo <- demographicsCohort(
     name = "demo"
 )
 
-cdm$demo0 <- cdm$demo |>compute(name="demo0")
-
 campaign<- "a_2023"
-cdm$vaccine_90_a_2023<-cdm$vaccine_camp|>
+cdm$vaccine_camp_a_2023<-cdm$vaccine_camp|>
   requireCampaign(campaign)|>
-  compute(name = "vaccine_90_a_2023")
+  compute(name = "vaccine_camp_a_2023")
 
 cdm$campaign1 <- cdm$demo |>
-  requireObs(campaign)|>
+  requireObs(campaign)|> #me coge el cohort de la funcion, otro return? un compute cambiado y luego fuera compute eso?
   compute(name = "campaign1")|>
   recordCohortAttrition(reason = "In observation")|>
-  addVaccinated(cdm$vaccine_90_a_2023) |>
+  addVaccinated(cdm$vaccine_camp_a_2023) |>
   addDatesCampaignAge(campaign)|>
   addImmunosuppressed() |>
   addAge() |>
@@ -32,15 +30,15 @@ cdm$campaign1 <- cdm$demo |>
   addSex(name = "campaign1") 
 
 campaign<- "s_2024"
-cdm$vaccine_90_s_2024<-cdm$vaccine_camp|>
+cdm$vaccine_camp_2024<-cdm$vaccine_camp|>
   requireCampaign(campaign)|>
-  compute(name = "vaccine_90_s_2024")
+  compute(name = "vaccine_camp_s_2024")
 
 cdm$campaign2 <- cdm$demo |>
   requireObs(campaign)|>
   recordCohortAttrition(reason = "In observation")|>
   compute(name = "campaign2")|>
-  addVaccinated(cdm$vaccine_90_s_2024) |>
+  addVaccinated(cdm$vaccine_camp_s_2024) |>
   addDatesCampaignAge(campaign)|>
   addImmunosuppressed() |>
   addAge() |>
@@ -55,15 +53,16 @@ cdm$campaign2 <- cdm$demo |>
   addSex(name = "campaign2") 
 
 campaign<- "a_2024"
-requireCampaign(campaign)|>
-  compute(name = "vaccine_90_a_2024")
+cdm$vaccine_camp_a_2024<-cdm$vaccine_camp|>
+  requireCampaign(campaign)|>
+  compute(name = "vaccine_camp_a_2024")
 
-cdm$campaign3 <- cdm$demo |>
+cdm$campaign3 <- cdm$demo2 |>
   requireObs(campaign)|>
   compute(name = "campaign3")|>
   recordCohortAttrition(reason = "In observation")|>
   compute(name = "campaign3")|>
-  addVaccinated(cdm$vaccine_90_a_2024) |>
+  addVaccinated(cdm$vaccine_camp_a_2024) |>
   addDatesCampaignAge(campaign)|>
   addImmunosuppressed() |>
   addAge() |>
@@ -82,7 +81,7 @@ cdm$vaccine_90_s_2025<-cdm$vaccine_camp|>
   requireCampaign(campaign)|>
   compute(name = "vaccine_90_s_2025")
 
-cdm$campaign4 <- cdm$demo |>
+cdm$campaign4 <- cdm$demo3 |>
   requireObs(campaign)|>
   recordCohortAttrition(reason = "In observation")|>
   compute(name = "campaign4")|>
@@ -100,24 +99,37 @@ cdm$campaign4 <- cdm$demo |>
   addDose(cdm$vaccine_90)|>
   addSex(name = "campaign4") 
 
-cdm <- bind(cdm$campaign1, 
-            cdm$campaign2, 
-            cdm$campaign3,
-            cdm$campaign4,
+cdm <- bind(cdm$campaign1 |> renameCohort("campaign1"), 
+            cdm$campaign2 |> renameCohort("campaign2"), 
+            cdm$campaign3 |> renameCohort("campaign3"),
+            cdm$campaign4 |> renameCohort("campaign4"),
             name = "all_campaigns")
 
-cdm$all_campaigns <- cdm$all_campaigns |>
-  addCohortName()
+cdm$all_campaigns <- cdm$all_campaigns|>
+  addCohortName() |>
+  select(-n_dose) |>
+  #mutate(dose= if_else(is.na(dose), "O dose", dose)) |>
+  mutate(status = if_else(
+    is.na(dose),
+    "UV",
+    paste0("V: ", dose)
+  ))|>
+  compute(name= "all_campaigns") 
 
 result <- summariseResult(
-  table = cdm$campaign1, 
+  table = cdm$all_campaigns, 
   group = "cohort_name",
   strata = combineStrata(c("region", "imd", "sex", "ethnicity")), 
-  variables = "vaccinated", 
-  estimates = c("count", "percentage")
-)
+  variables = list(c("vaccinated", "status"), c("cohort_start_date")),
+  estimates = list(c("count", "percentage"), c("min", "max", "median", "q25", "q75")))
 
 tidy(result)
+exportSummarisedResult(result,   
+                       minCellCount = min_cell_count,
+                       fileName = "results_{cdm_name}_{date}.csv",
+                       path = here("Results"))
 
-
+result <- importSummarisedResult(path="Results/results_cdm_gold_202507_2026_03_23.csv")
   
+tidy(result|>filter(result_id==1))
+visOmopResults::visOmopTable(result|>filter(result_id==1), header = c("cohort_name"))

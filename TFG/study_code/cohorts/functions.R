@@ -1,5 +1,5 @@
-addRegion <- function(cohort){
-  cohort|>
+addRegion <- function(cohort, name = tableName(cohort)){
+  cohort|>-
   left_join(cdm$location |>
     select(location_source_value, location_id)|>
     inner_join( 
@@ -14,10 +14,11 @@ addRegion <- function(cohort){
     )|>
     select(location_source_value, person_id)|>
     rename(subject_id=person_id, region=location_source_value)
-  )
+  ) |>
+    compute(name = name)
 }
 
-addIMD <- function(cohort){
+addIMD <- function(cohort, name = tableName(cohort)){
   cohort|>
     left_join(cdm$measurement |>     
   filter(measurement_concept_id== "715996")|>
@@ -30,18 +31,21 @@ addIMD <- function(cohort){
     imd %in% c(7,8) ~ "Q4",
     imd %in% c(9,10) ~ "Q5")
     ),
-  by="subject_id")  
+  by="subject_id") |>
+    compute(name = name) 
   }
 
-addEthnicity <- function(cohort){
+addEthnicity <- function(cohort, name = tableName(cohort)){
   cohort|>
     left_join(cdm$person|>
                 rename(subject_id=person_id, 
                        ethnicity=race_source_value)|>
-                select(subject_id, ethnicity), by="subject_id") 
+                select(subject_id, ethnicity) |>
+                mutate(ethnicity = coalesce(ethnicity, "missing")), by="subject_id") |>
+    compute(name = name)
 }
 
-addImmunosuppressed <- function(cohort) {
+addImmunosuppressed <- function(cohort, name = tableName(cohort)) {
   cohort |>
        addConceptIntersectFlag(conceptSet = list("immuno_condsyst"=
                                                    codelist$syst_corticosteriods
@@ -85,11 +89,11 @@ addImmunosuppressed <- function(cohort) {
         0L)
       ) |>
       select(-immuno_agent_last_1_2year,-immuno_cond_last_year, -immuno_agsyst_last_year, -immuno_condsyst_last_1_2year) 
-      # compute(name=tableName(cohort))
+      compute(name = name)
   
 }
 
-addCampaigns <- function(cohort){
+addCampaigns <- function(cohort, name = tableName(cohort)){
   cohort|>
     #filter(cohort_start_date>as.Date("2023-10-02") & cohort_start_date<as.Date("2026-01-31"))|>
     mutate(vaccination_campaign = case_when(
@@ -100,12 +104,12 @@ addCampaigns <- function(cohort){
       cohort_start_date>=as.Date("2025-09-01") & cohort_start_date<=as.Date("2026-01-31") ~ "a_2025",
       TRUE ~ NA_character_)
     ) 
- # |> compute(name=tableName(cohort))
+ |> compute(name = name)
  #   |> filter(!is.na(vaccination_campaign)) 
   
 }
 
-addDose <- function(cohort, vaccine_cohort) {
+addDose <- function(cohort, vaccine_cohort, name = tableName(cohort)) {
   
   vaccine_cohort_dose <- vaccine_cohort |>
     group_by(subject_id) |>
@@ -124,21 +128,22 @@ addDose <- function(cohort, vaccine_cohort) {
     left_join(
       vaccine_cohort_dose |> select(subject_id, n_dose, dose),
       by = "subject_id"
-    )  
+    )  |>
+    compute(name = name)
   # |> if_else(
   #     is.na(n_dose), 0, n_dose)|>
   #   if_else(
   #     is.na(n_dose), "0 dose", dose)
 }
 
-requireCampaign <- function(vaccine_cohort, campaign){
+requireCampaign <- function(vaccine_cohort, campaign, name = "{vaccine_cohort}_{campaign}"){
   vaccine_cohort |>
     filter(vaccination_campaign == campaign) |>
     mutate(vaccine_start_date=cohort_start_date)|>
-    compute(name = "vaccine_90_{campaign}")
+    compute(name = name)
 }
 
-addVaccinated <- function(cohort, vaccine_cohort_s){
+addVaccinated <- function(cohort, vaccine_cohort_s, name = tableName(cohort)){
   cohort |> addCohortIntersectFlag(
     targetCohortTable = tableName(vaccine_cohort_s),
     indexDate = "cohort_start_date",
@@ -153,10 +158,11 @@ addVaccinated <- function(cohort, vaccine_cohort_s){
     
     mutate(cohort_start_date=vaccine_start_date) |>
     mutate(cohort_end_date=cohort_start_date) |>
-    select(-vaccine_start_date)
+    select(-vaccine_start_date) |>
+    compute(name = name)
 }
 
-requireObs <- function(cohort, campaign){
+requireObs <- function(cohort, campaign, num= "" , name = paste0("campaign",num)){
   start <- case_when(
         campaign == "a_2023" ~ as.Date("2023-01-31"),
         campaign == "s_2024" ~ as.Date("2023-06-30"),
@@ -170,18 +176,28 @@ requireObs <- function(cohort, campaign){
         campaign == "a_2024" ~ as.Date("2024-10-03"),
         campaign == "s_2025" ~ as.Date("2025-04-01"),
         campaign == "a_2025" ~ as.Date("2025-09-01"))
+  
+  num <- case_when(
+    campaign == "a_2023" ~ "1",
+    campaign == "s_2024" ~ "2",
+    campaign == "a_2024" ~ "3",
+    campaign == "s_2025" ~ "4",
+    campaign == "a_2025" ~ "5")
 
   cohort|>
       requireInDateRange(
       dateRange=as.Date(c(NA, start)),
-      indexDate = "cohort_start_date"
+      indexDate = "cohort_start_date",
+      name = name
     )|>
       requireInDateRange(
         dateRange=as.Date(c(end, NA)),
-        indexDate = "cohort_end_date"
+        indexDate = "cohort_end_date",
+        name = name
       )|>
       requireDuration(
-        daysInCohort = c(365, Inf)
+        daysInCohort = c(365, Inf),
+        name = name
       )
 }
 
@@ -193,14 +209,6 @@ addDatesCampaignAge <- function(cohort, campaign){
       campaign == "s_2025" ~ as.Date("2025-04-01"),
       campaign == "a_2025" ~ as.Date("2025-09-01")
   )
-  # cohort_c <- cohort 
-  # non_vaccinated<-cohort_c|>filter(vaccinated == 0L)|> 
-  #   trimToDateRange(
-  #   dateRange=as.Date(c(date, date)),
-  #   cohortId = NULL,
-  #   startDate = "cohort_start_date",
-  #   endDate = "cohort_end_date"
-  # )
   cohort|>mutate(cohort_start_date= if_else(
     is.na(cohort_start_date),
     date,

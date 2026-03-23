@@ -58,3 +58,7 @@ cdm$vaccine_camp_d <- cdm$vaccine_camp |>
   addIMD()|>
   compute(name="vaccine_camp_d")
 
+exportSummarisedResult(results,
+                       minCellCount = min_cell_count,
+                       fileName = "results_{cdm_name}_{date}.csv",
+                       path = here("Results"))
