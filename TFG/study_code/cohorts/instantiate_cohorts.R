@@ -27,7 +27,7 @@ cdm$vaccine_camp <- cdm$vaccine_90 |>
   left_join(
     get_regions, 
     by= "subject_id")|>
-  recordCohortAttrition(reason="vaccine_campaigns") |>
+  recordCohortAttrition(reason="vaccine_campaigns") |> # MC separar en diferent steps?
   compute(name = "vaccine_camp") 
 
 cdm$vaccine_90_dose <-cdm$vaccine_90 |>
@@ -44,6 +44,7 @@ cdm$vaccine_90_dose <-cdm$vaccine_90 |>
   rename(n_dose=n)|>
   compute(name="vaccine_90_dose")
 
+# MC to use function?
 cdm$vaccine_camp_imm <- cdm$vaccine_camp |>
   addConceptIntersectFlag(conceptSet = list("immuno_condsyst"=
                                               codelist$syst_corticosteriods
