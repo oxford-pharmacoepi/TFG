@@ -19,6 +19,7 @@ cdm$campaign1 <- cdm$demo |>
   addEthnicity() |>
   addDoseCampaign() |>
   addDosePriorCampaign() |>
+  filter(prior_dose>=2L) |>
   addSex(name = "campaign1")
 
 campaign<- "s_2024"

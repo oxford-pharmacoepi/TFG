@@ -51,7 +51,6 @@ results[["log"]] <- summariseLogFile(cdmName = omopgenerics::cdmName(cdm))
 # Finish ----
 results$largeScale <- LargeScaleCharacteristics
 results$characterisation <- characterisation
-results$characterisation_a <- characterisation_a
 
 results <- results |>
   vctrs::list_drop_empty() |>
