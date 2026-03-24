@@ -1,22 +1,13 @@
-cdm$demo <- demographicsCohort(
-    cdm, 
-    ageRange = NULL, 
-    sex = NULL,
-    minPriorObservation = NULL, # cohort_start_date will start one year later if we put 365
-    name = "demo"
-)
+# Select the individuals to be included for the coverage assessment
+cdm$demo <- demographicsCohort(cdm, name = "demo")
 
-campaign<- "a_2023"
-cdm$vaccine_camp_a_2023<-cdm$vaccine_camp|>
-  requireCampaign(campaign)|>
-  compute(name = "vaccine_camp_a_2023")
-
+campaign <- "a_2023"
 cdm$campaign1 <- cdm$demo |>
-  requireObs(campaign)|> #me coge el cohort de la funcion, otro return? un compute cambiado y luego fuera compute eso?
-  compute(name = "campaign1")|>
+  copyCohorts(n = 1, name = "campaign1") |>
+  trimDatesIntoCampaign(campaign) |>
   recordCohortAttrition(reason = "In observation")|>
-  addVaccinated(cdm$vaccine_camp_a_2023) |>
-  addDatesCampaignAge(campaign)|>
+  compute(name = "campaign1") |>
+  addVaccinatedInCampaign() |>
   addImmunosuppressed() |>
   addAge() |>
   compute(name = "campaign1") |> 
@@ -26,8 +17,9 @@ cdm$campaign1 <- cdm$demo |>
   addRegion() |>
   addIMD() |>
   addEthnicity() |>
-  addDose(cdm$vaccine_90)|>
-  addSex(name = "campaign1") 
+  addDoseCampaign() |>
+  addDosePriorCampaign() |>
+  addSex(name = "campaign1")
 
 campaign<- "s_2024"
 cdm$vaccine_camp_2024<-cdm$vaccine_camp|>

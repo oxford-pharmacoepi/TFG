@@ -11,10 +11,6 @@ library(CodelistGenerator)
 library(CohortConstructor)
 library(PatientProfiles)
 library(CohortCharacteristics)
-library(DrugUtilisation) # MC es pot eliminar (not used)
-library(IncidencePrevalence) # MC es pot eliminar (not used)
-library(CohortSurvival) # MC es pot eliminar (not used)
-library(odbc) # MC es pot eliminar (not used)
 library(RPostgres)
 library(modeltools)
 
@@ -23,15 +19,6 @@ library(modeltools)
 dbName <- Sys.getenv("DB_NAME")
 
 # Database connection details
-# db <- dbConnect(
-#   RPostgres::Postgres(),
-#   dbname = server_dbi,
-#   port = port,
-#   host = host,
-#   user = user,
-#   password = password
-# )
-
 db <- DBI::dbConnect(RPostgres::Postgres(),
                       dbname = dbName,
                       host = Sys.getenv("DB_HOST"),

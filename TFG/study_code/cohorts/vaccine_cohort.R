@@ -1,64 +1,22 @@
-cdm$vaccine_90 <- conceptCohort(cdm = cdm,
-                             conceptSet = list(
-                               "vaccine_record" =
-                                 vac),
-                             name = "vaccine"
-)|>
-  requireCohortIntersect(
-    targetCohortTable = "vaccine", 
-    window = c(-90, -1), #si habiamos windeado el cohort: CUIDADO!!!!
-    intersections = 0,
-    name="vaccine_90"
-  )
-
-cdm$vaccine_camp <- cdm$vaccine_90 |> 
-  addCampaigns()|>
-  #recordCohortAttrition(reason="vaccine_campaigns") |>
-  compute(name = "vaccine_camp") 
-
-cdm$vaccine_90_dose <-cdm$vaccine_90 |>
-  addDose()|>
-  compute(name="vaccine_90_dose")|>
-  addCampaigns()|>
-  compute(name="vaccine_90_dose")
-
-cdm$vaccine_camp_imm <- cdm$vaccine_camp|>
-  addImmunosuppressed()|>
-  compute(name="vaccine_camp_imm") |> #sense aquesta linea no funciona? NO
-  filter(immunosuppressed == 1L)|>
-  compute(name="vaccine_camp_imm")
-
-cdm$vaccine_age <- cdm$vaccine_camp |>
-  requireAge(
-    ageRange=c(75, Inf),
-    cohortId = NULL,
-    name = "vaccine_age_75"
-  ) |>
-  addAge(name="vaccine_age_75") |>
-  full_join(cdm$vaccine_camp |>
-              filter(vaccination_campaign=="A_2023") |>
-              addAge() |>
-              filter(age>="65")
-  ) |>
-  compute(name="vaccine_age")
-
-cdm$vaccine_eligible <- full_join(cdm$vaccine_camp_imm, 
-                                  cdm$vaccine_age)|>
-  mutate(immunosuppressed=if_else(is.na(immunosuppressed), 0L, 1L)) |>
-  compute(name="vaccine_eligible")
-
-cdm$vaccine_camp_fin <- inner_join(cdm$vaccine_camp 
-                                   , cdm$vaccine_eligible) |>
-  compute(name="vaccine_camp_fin")  |>
-  recordCohortAttrition(reason="eligibles") 
-
-cdm$vaccine_camp_d <- cdm$vaccine_camp |>
-  addEthnicity() |> 
-  addSex()|> 
-  addIMD()|>
-  compute(name="vaccine_camp_d")
-
-exportSummarisedResult(results,
-                       minCellCount = min_cell_count,
-                       fileName = "results_{cdm_name}_{date}.csv",
-                       path = here("Results"))
+# Vaccinated people within the vaccination campaigns of interest -either for being immunosuppressed or by age- 
+#stratified by age, ethnicity, IMD, sex and region. Will be used for overall attrition
+cdm$vaccinated_within_campaigns <-cdm$vaccine_90 |>
+  #for sensitivity analysis
+  #requireInDateRange(dateRange =c(NA, "2021-01-01"), name = "vaccinated_within_campaigns")|>
+  addCampaigns(name = "vaccinated_within_campaigns") |>
+  filter(vaccination_campaign != "None")|>
+  compute(name = "vaccinated_within_campaigns")|>
+  recordCohortAttrition(reason = "Vaccinated within campaigns of interest") |>
+  compute(name = "vaccinated_within_campaigns")|>
+  addImmunosuppressed() |>
+  addAge() |> 
+  filter(if_else(vaccination_campaign == "a_2023", 
+                 age >= 75L | immunosuppressed == 1L, 
+                 age >= 65L | immunosuppressed == 1L)) |>
+  compute(name = "vaccinated_within_campaigns")|>
+  recordCohortAttrition(reason = "Inclusion criteria by age and immunosuppresion") |>
+  compute(name = "vaccinated_within_campaigns")|>
+  addRegion() |>
+  addIMD() |>
+  addEthnicity() |>
+  addSex(name = "vaccinated_within_campaigns")

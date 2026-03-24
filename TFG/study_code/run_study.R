@@ -1,7 +1,7 @@
 omopgenerics::assertNumeric(min_cell_count)
 
 # Create a log file ----
-createLogFile(logFile = here("Results", "log_{date}_{time}")))
+createLogFile(logFile = here("Results", "log_{date}_{time}"))
 logMessage("LOG CREATED")
 
 # Define analysis settings -----
@@ -13,28 +13,36 @@ results <- list()
 # CDM modifications -----
 
 # CDM summary -----
-logMessage("Extract CDM snapshot") # MC
+logMessage("Extract CDM snapshot") 
 results[["snapshot"]] <- summariseOmopSnapshot(cdm)
 
-logMessage("Extract observation period summary") # MC
+logMessage("Extract observation period summary") 
 results[["obs_period"]] <- summariseObservationPeriod(cdm$observation_period)
 
 # Instantiate study cohorts ----
 logMessage("Instantiating study cohorts")
-source(here("codelist", "codelist_creation.R")) # MC the code seems more to read the codelists than to create them no?
+source(here("codelist", "codelist_reading.R")) 
 source(here("cohorts", "functions.R"))
-source(here("cohorts", "instantiate_cohorts.R"))
-source(here("cohorts", "all.R")) # MC does not exist
+logMessage("Codelists and functions to be used imported")
+
+source(here("cohorts", "instantiate_cohorts.R")) 
+logMessage("Vaccinated people identified by campaign")
+
+source(here("cohorts", "vaccine_cohorts.R"))
+logMessage("Vaccinated people within the vaccination campaigns of interest -either for being immunosuppressed or by age- 
+           stratified by age, ethnicity, IMD, sex and region. Will be used for overall attrition") 
+
+source(here("cohorts", "all_campaign.R")) 
+logMessage("Eligibles for each of the vaccination campaigns -either for being immunosuppressed or by age- 
+           stratified by age, ethnicity, IMD, sex and region. Will be used for coverage")  
 logMessage("Study cohorts instantiated")
 
 # Cohort counts and attrition ----
-results[["attrition"]] <- summariseCohortAttrition(cdm$vaccine_camp_fin)
-results[["attrition_a"]] <- summariseCohortAttrition(cdm$all_denom)
+results[["attrition"]] <- summariseCohortAttrition(cdm$vaccinated_within_campaigns)
 
 # Run analyses ----
 logMessage("Run study analyses")
 source(here("analyses", "vaccine_characteristics.R"))
-source(here("analyses", "all_characteristics.R"))
 logMessage("Analyses finished")
 
 # Capture log file ----
