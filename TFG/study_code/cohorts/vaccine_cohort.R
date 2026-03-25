@@ -19,4 +19,5 @@ cdm$vaccinated_within_campaigns <-cdm$vaccine_90 |>
   addRegion() |>
   addIMD() |>
   addEthnicity() |>
+  addAgeEligibility() |>
   addSex(name = "vaccinated_within_campaigns")

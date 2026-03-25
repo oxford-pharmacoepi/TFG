@@ -1,3 +1,4 @@
+#functions to be used for the cohort creation
 addIMD <- function(cohort, name = tableName(cohort)){
   cohort|>
     left_join(cdm$measurement |>     
@@ -56,7 +57,8 @@ addImmunosuppressed <- function(cohort, name = tableName(cohort)) {
       ),
       window = list(
         "last_1_2year" = c(-183, 0)
-      )
+      ),
+      name = name
     ) |>
     addConceptIntersectFlag(
       conceptSet = list(
@@ -65,7 +67,8 @@ addImmunosuppressed <- function(cohort, name = tableName(cohort)) {
       ),
       window = list(
         "last_year" = c(-365, 0)
-      )
+      ),
+      name = name
     ) |>
     addConceptIntersectFlag(
       conceptSet = list(
@@ -77,7 +80,8 @@ addImmunosuppressed <- function(cohort, name = tableName(cohort)) {
       ),
       window = list(
         "last_1_2year" = c(-183, 0)
-      )
+      ),
+      name = name
     ) |>
     addConceptIntersectFlag(
       conceptSet = list(
@@ -91,7 +95,8 @@ addImmunosuppressed <- function(cohort, name = tableName(cohort)) {
       ),
       window = list(
         "last_year" = c(-365, 0)
-      )
+      ),
+      name = name
     ) |>
     mutate(
       immunosuppressed = if_else(
@@ -99,8 +104,8 @@ addImmunosuppressed <- function(cohort, name = tableName(cohort)) {
           immuno_agent_last_1_2year == 1 |
           immuno_cond_last_year == 1,
         1L, 0L)
-      ) |>
-      select(-immuno_agent_last_1_2year,-immuno_cond_last_year, -immuno_agsyst_last_year, -immuno_condsyst_last_1_2year) |>
+    ) |>
+    select(-immuno_agent_last_1_2year,-immuno_cond_last_year, -immuno_agsyst_last_year, -immuno_condsyst_last_1_2year) |>
     compute(name = name)
 }
 
@@ -121,10 +126,10 @@ addCampaigns <- function(cohort, name = tableName(cohort)){
   
 }
 
-addDoseCampaign <- function(cohort, vaccine_cohort= cdm$vaccine_90, name = tableName(cohort)) {
+addDoseCampaign <- function(cohort, name = tableName(cohort)) {
   cohort |>
     addCohortIntersectField(
-      targetCohortTable = tableName(vaccine_cohort),
+      targetCohortTable = "vaccine_90",
       field = "dose",
       indexDate = "cohort_start_date", # start of vaccination campaign
       censorDate = "cohort_end_date", # end of vaccination campaign
@@ -135,23 +140,26 @@ addDoseCampaign <- function(cohort, vaccine_cohort= cdm$vaccine_90, name = table
     ) 
 }
 
-addDosePriorCampaign <- function(cohort, vaccine_cohort= cdm$vaccine_90, name = tableName(cohort)) {
+addDosePriorCampaign <- function(cohort, name = tableName(cohort)) {
   cohort|>
-    addCohortIntersectCount(
-      targetCohortTable = tableName(vaccine_cohort),
-      window = c(-Inf, -1),
-      nameStyle = "prior_doses",
+    addCohortIntersectField(
+      targetCohortTable = "vaccine_90",
+      field = "dose",
+      indexDate = "cohort_start_date", # start of vaccination campaign
+      censorDate = "cohort_end_date", # end of vaccination campaign
+      order = "last",
+      window = list(c(-Inf, -1)),
+      nameStyle = "prior_dose",
       name = name
-    ) |>
+    )|>
     # time since last dose
-    addCohortIntersectDate(
-      targetCohortTable = tableName(vaccine_cohort),
+    addCohortIntersectDays(
+      targetCohortTable = "vaccine_90",
       window = c(-Inf, -1),
       order = "last",
-      nameStyle = "last_dose_date",
+      nameStyle = "last_dose_days",
       name = name
-    ) |>
-    mutate(last_dose_date = coalesce(last_dose_date, "None"))
+    )
     
 }
 
@@ -162,19 +170,19 @@ requireCampaign <- function(vaccine_cohort, campaign, name = "{vaccine_cohort}_{
     compute(name = name)
 }
 
-addVaccinatedInCampaign <- function(cohort, vaccine_cohort = cdm$vaccine_90, name = tableName(cohort)){
-  cohort |> addCohortIntersectFlag(
-    targetCohortTable = tableName(vaccine_cohort),
+addVaccinatedInCampaign <- function(cohort, name = tableName(cohort)){
+  cohort |> 
+    addCohortIntersectFlag(
+    targetCohortTable = "vaccine_90",
     indexDate = "cohort_start_date",
     censorDate = "cohort_end_date",
     window = list(c(0, Inf)),
     nameStyle = "vaccinated",
-    name = tableName(cohort)
-   ) |> 
-    compute(name = name)
+    name = name
+   )
 }
 
-trimDatesIntoCampaign <- function(cohort, campaign, num= "_all" , name = paste0("campaign",num)) {
+trimDatesIntoCampaign <- function(cohort, campaign) {
   start <- switch(campaign,
      "a_2023" = as.Date("2023-10-02"),
      "s_2024" = as.Date("2024-04-15"),
@@ -190,15 +198,21 @@ trimDatesIntoCampaign <- function(cohort, campaign, num= "_all" , name = paste0(
      "a_2025" = as.Date("2026-01-31")
      )
 
-  num <- switch(campaign,
-     "a_2023" = "1",
-    "s_2024" = "2",
-    "a_2024" = "3",
-    "s_2025" = "4",
-    "a_2025" = "5")
-
   cohort|>
     trimToDateRange(c(start, end)) |>
-    requirePriorObservation(minPriorObservation = 365) |>
+    requirePriorObservation(minPriorObservation = 365)
+}
+
+addAgeEligibility <- function(cohort, name = tableName(cohort), campaign ="all") {
+  cohort|>
+    mutate(age_eligibility=case_when(
+      (vaccination_campaign == "a_2023" | campaign == "a_2023") & age >= 65 ~ 1L, 
+      (vaccination_campaign == "s_2024" | campaign == "s_2024") & age >= 75 ~ 1L,
+      (vaccination_campaign == "a_2024" | campaign == "a_2024") & age >= 75 ~ 1L,
+      (vaccination_campaign == "s_2025" | campaign == "s_2025") & age >= 75 ~ 1L,
+      (vaccination_campaign == "a_2025" | campaign == "a_2025") & age >= 75 ~ 1L,
+  TRUE ~ 0L) 
+    ) |> 
     compute(name = name)
 }
+

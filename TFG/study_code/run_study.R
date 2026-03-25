@@ -21,8 +21,8 @@ results[["obs_period"]] <- summariseObservationPeriod(cdm$observation_period)
 
 # Instantiate study cohorts ----
 logMessage("Instantiating study cohorts")
-source(here("codelist", "codelist_reading.R")) 
-source(here("cohorts", "functions.R"))
+codelist <- importCodelist("codelist", type = "csv")
+source(here("functions.R"))
 logMessage("Codelists and functions to be used imported")
 
 source(here("cohorts", "instantiate_cohorts.R")) 
@@ -38,19 +38,23 @@ logMessage("Eligibles for each of the vaccination campaigns -either for being im
 logMessage("Study cohorts instantiated")
 
 # Cohort counts and attrition ----
-results[["attrition"]] <- summariseCohortAttrition(cdm$vaccinated_within_campaigns)
+results[["attrition_vaccinated"]] <- summariseCohortAttrition(cdm$vaccinated_within_campaigns)
+results[["attrition_campaign1"]] <- summariseCohortAttrition(cdm$campaign1)
 
 # Run analyses ----
 logMessage("Run study analyses")
 source(here("analyses", "vaccine_characteristics.R"))
+logMessage("Analyses for the vaccinated people stratified for all campaigs, 
+           where the 2 dosis filter isn't considered DONE")
+
 logMessage("Analyses finished")
 
 # Capture log file ----
 results[["log"]] <- summariseLogFile(cdmName = omopgenerics::cdmName(cdm))
 
 # Finish ----
-results$largeScale <- LargeScaleCharacteristics
 results$characterisation <- characterisation
+
 
 results <- results |>
   vctrs::list_drop_empty() |>
@@ -61,9 +65,10 @@ exportSummarisedResult(results,
                        path = here("Results"))
 
 # Results to save as csv and plot ----
-#source(here("analyses", "docs_to_plot.R"))
-#write.csv(x_90, "Results/plot_90.csv", row.names = FALSE)
-#write.csv(x_dose, "Results/plot_dose.csv", row.names = FALSE)
+# Save data for the local plots of the vaccination chronology 
+#(see "vaccination_chronology" for more info). Should be computed once
+#source(here("analyses", "vaccination_chronology.R"))
+write.csv(x_dose, "Results/plot_dose.csv", row.names = FALSE)
 
 cli::cli_alert_success("Study finished")
 
